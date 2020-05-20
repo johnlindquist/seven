@@ -1,9 +1,53 @@
-import "./styles.css";
+/*
+The task is to build a frame containing a label or read-only textfield
+T and a button B. Initially, the value in T is “0” and each click of
+ B increases the value in T by one.
+*/
 
-document.getElementById("app").innerHTML = `
-<h1>Hello Vanilla!</h1>
-<div>
-  We use Parcel to bundle this sandbox, you can find more info about Parcel
-  <a href="https://parceljs.org" target="_blank" rel="noopener noreferrer">here</a>.
-</div>
-`;
+
+
+let createListenerByID = (id, eventType) => listener => {
+  let element = document.getElementById(id)
+  element.addEventListener(eventType, listener)
+}
+
+let incClickListener = createListenerByID("inc", "click")
+let decClickListener = createListenerByID("dec", "click")
+
+let both = (addListenerOne, addListenerTwo) => listener => {
+  addListenerOne(listener)
+  addListenerTwo(listener)
+}
+
+
+let updateState = initialState => addListener => listener => {
+  let state = initialState
+
+  listener(state)
+
+  addListener(value => {
+    state = value(state)
+    listener(state)
+  })
+}
+
+
+
+let mapTo = mappedValue => addListener => listener => {
+  addListener(value => {
+    listener(mappedValue)
+  })
+}
+
+let inc = x => x + 1
+let dec = x => x - 1
+let incAndDecButtons = both(mapTo(inc)(incClickListener), mapTo(dec)(decClickListener))
+
+let counter = updateState(10)(incAndDecButtons)
+
+
+
+let number = document.getElementById("number")
+counter(value => {
+  number.value = value
+})
