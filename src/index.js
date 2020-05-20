@@ -1,53 +1,65 @@
 /*
-The task is to build a frame containing a label or read-only textfield
-T and a button B. Initially, the value in T is “0” and each click of
- B increases the value in T by one.
+
+The formula for converting a temperature C in 
+Celsius into a temperature F in Fahrenheit
+C = (F - 32) * (5/9)
+F = C * (9/5) + 32.
+
 */
 
+let celsius = document.getElementById("c")
+let fahrenheit = document.getElementById("f")
 
 
-let createListenerByID = (id, eventType) => listener => {
-  let element = document.getElementById(id)
-  element.addEventListener(eventType, listener)
+let createInputListener = element => listener => {
+  element.addEventListener("input", listener)
 }
 
-let incClickListener = createListenerByID("inc", "click")
-let decClickListener = createListenerByID("dec", "click")
+let celsiusInput = createInputListener(celsius)
+let fahrenheitInput = createInputListener(fahrenheit)
+
+
+let apply = initialState => addListener => listener => {
+  let state = initialState
+  listener(state)
+
+  addListener(([fn, value]) => {
+    state = fn(value)
+
+    listener(state)
+  })
+}
+
+let mapTo = mappedValue => addListener => listener => {
+  addListener(event => {
+    listener([mappedValue, event.target.value])
+  })
+}
 
 let both = (addListenerOne, addListenerTwo) => listener => {
   addListenerOne(listener)
   addListenerTwo(listener)
 }
 
+let updateCelsiusFromState = currentFahrenheit => ({
+  celsiusValue: (currentFahrenheit - 32) * (5 / 9),
+  fahrenheitValue: currentFahrenheit
+})
 
-let updateState = initialState => addListener => listener => {
-  let state = initialState
+let updateFahrenheitFromState = currentCelsius => ({
+  celsiusValue: currentCelsius,
+  fahrenheitValue: currentCelsius * (9 / 5) + 32
+})
 
-  listener(state)
+let fahrenheitFnPusher = mapTo(updateCelsiusFromState)(fahrenheitInput)
+let celsiusFnPusher = mapTo(updateFahrenheitFromState)(celsiusInput)
 
-  addListener(value => {
-    state = value(state)
-    listener(state)
-  })
-}
+let initialState = { fahrenheitValue: 32, celsiusValue: 0 }
+let temperatureConversion = apply(initialState)
+  (both(celsiusFnPusher, fahrenheitFnPusher))
 
-
-
-let mapTo = mappedValue => addListener => listener => {
-  addListener(value => {
-    listener(mappedValue)
-  })
-}
-
-let inc = x => x + 1
-let dec = x => x - 1
-let incAndDecButtons = both(mapTo(inc)(incClickListener), mapTo(dec)(decClickListener))
-
-let counter = updateState(10)(incAndDecButtons)
-
-
-
-let number = document.getElementById("number")
-counter(value => {
-  number.value = value
+temperatureConversion(state => {
+  console.log(state)
+  celsius.value = Math.floor(state.celsiusValue)
+  fahrenheit.value = Math.floor(state.fahrenheitValue)
 })
